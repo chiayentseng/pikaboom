@@ -1,10 +1,10 @@
-﻿import { SectionCard } from "@/components/section-card";
+import { SectionCard } from "@/components/section-card";
 import { getCharacterProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ChildCollectionPage() {
-  const characters = getCharacterProgress();
+export default async function ChildCollectionPage() {
+  const characters = await getCharacterProgress();
 
   return (
     <SectionCard eyebrow="Collection" title="角色圖鑑" description="圖鑑會保留未解鎖條件，讓孩子知道再努力多少就能遇見下一位夥伴。">
@@ -27,4 +27,3 @@ export default function ChildCollectionPage() {
     </SectionCard>
   );
 }
-

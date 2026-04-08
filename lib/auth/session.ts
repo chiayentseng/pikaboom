@@ -1,4 +1,4 @@
-﻿import { cookies } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAppMode } from "@/lib/config/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -14,45 +14,82 @@ export type AppSession = SessionContext & {
   mode: "local" | "supabase";
 };
 
+async function resolveSupabaseSession(actingChildId: string | null): Promise<Omit<AppSession, "mode">> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      isAuthenticated: false,
+      role: "guest",
+      householdId: null,
+      parentProfileId: null,
+      childProfileId: null,
+      actingChildId: null,
+      email: null,
+      displayName: null
+    };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  const { data: memberships } = await supabase
+    .from("household_members")
+    .select("household_id,member_role")
+    .eq("profile_id", user.id)
+    .order("created_at", { ascending: true });
+
+  const householdMembership = memberships?.find((membership) => membership.member_role === "parent") ?? memberships?.[0] ?? null;
+  const householdId = householdMembership?.household_id ?? null;
+
+  let childProfiles: Array<{ id: string }> = [];
+  if (householdId) {
+    const { data } = await supabase
+      .from("child_profiles")
+      .select("id")
+      .eq("household_id", householdId)
+      .order("created_at", { ascending: true });
+
+    childProfiles = data ?? [];
+  }
+
+  const hasRequestedChild = Boolean(actingChildId && childProfiles.some((child) => child.id === actingChildId));
+  const resolvedActingChildId = hasRequestedChild ? actingChildId : null;
+  const defaultChildProfileId = resolvedActingChildId ?? childProfiles[0]?.id ?? null;
+
+  return {
+    isAuthenticated: true,
+    role: resolvedActingChildId ? "child" : "parent",
+    householdId,
+    parentProfileId: user.id,
+    childProfileId: defaultChildProfileId,
+    actingChildId: resolvedActingChildId,
+    email: user.email ?? null,
+    displayName: profile?.display_name ?? (user.user_metadata.display_name as string | undefined) ?? user.email ?? "Parent"
+  };
+}
+
 export async function getAppSession(): Promise<AppSession> {
   const mode = getAppMode();
   const cookieStore = await cookies();
   const actingChildId = cookieStore.get(ACTING_CHILD_COOKIE)?.value ?? null;
 
   if (mode === "supabase") {
-    const supabase = await createSupabaseServerClient();
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return {
-        isAuthenticated: false,
-        role: "guest",
-        householdId: null,
-        parentProfileId: null,
-        childProfileId: null,
-        actingChildId: null,
-        email: null,
-        displayName: null,
-        mode
-      };
-    }
-
+    const resolved = await resolveSupabaseSession(actingChildId);
     return {
-      isAuthenticated: true,
-      role: actingChildId ? "child" : "parent",
-      householdId: "supabase-household-pending",
-      parentProfileId: user.id,
-      childProfileId: actingChildId,
-      actingChildId,
-      email: user.email ?? null,
-      displayName: (user.user_metadata.display_name as string | undefined) ?? user.email ?? "Parent",
+      ...resolved,
       mode
     };
   }
 
   const isAuthenticated = cookieStore.get(DEV_PARENT_COOKIE)?.value === "1";
+
   return {
     isAuthenticated,
     role: !isAuthenticated ? "guest" : actingChildId ? "child" : "parent",

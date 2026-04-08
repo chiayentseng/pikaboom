@@ -1,14 +1,17 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { SectionCard } from "@/components/section-card";
 import { getProfile, getStats, getTodayTasks, getWorldProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
-  const profile = getProfile();
-  const stats = getStats();
-  const todayTasks = getTodayTasks();
-  const worldAreas = getWorldProgress();
+export default async function HomePage() {
+  const [profile, stats, todayTasks, worldAreas] = await Promise.all([
+    getProfile(),
+    getStats(),
+    getTodayTasks(),
+    getWorldProgress()
+  ]);
+  const nextWorld = worldAreas.find((area) => area.state !== "UNLOCKED");
   const claimableCount = todayTasks.filter((task) => task.status === "READY_TO_CLAIM").length;
 
   return (
@@ -56,7 +59,7 @@ export default function HomePage() {
         <SectionCard
           eyebrow="Main Loop"
           title="孩子做完任務後，獎勵與世界進度會被記錄下來"
-          description="今天的任務狀態、可領獎數、地圖解鎖條件都來自 SQLite，而不是固定假資料。"
+          description="今天的任務狀態、可領獎數、地圖解鎖條件都來自資料庫，而不是固定假資料。"
         >
           <div className="soft-grid" style={{ gap: 16 }}>
             <div className="world-preview">
@@ -77,9 +80,9 @@ export default function HomePage() {
               </div>
               <div className="task-card">
                 <div className="mini-label">下一區域</div>
-                <div style={{ fontSize: "1.15rem", fontWeight: 700 }}>{worldAreas.find((area) => area.state !== "已開啟")?.name ?? "全區已開啟"}</div>
+                <div style={{ fontSize: "1.15rem", fontWeight: 700 }}>{nextWorld?.name ?? "全區已開啟"}</div>
                 <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-                  {worldAreas.find((area) => area.state !== "已開啟")?.unlockHint ?? "現在可以繼續累積稀有內容與角色成長。"}
+                  {nextWorld?.unlockHint ?? "現在可以繼續累積稀有內容與角色成長。"}
                 </p>
               </div>
             </div>
@@ -110,4 +113,3 @@ export default function HomePage() {
     </main>
   );
 }
-

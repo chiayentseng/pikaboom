@@ -1,17 +1,20 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { SectionCard } from "@/components/section-card";
 import { claimTaskAction } from "@/app/actions";
 import { getCharacterProgress, getProfile, getStats, getTodayTasks, getWorldProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ChildHomePage() {
-  const profile = getProfile();
-  const stats = getStats();
-  const tasks = getTodayTasks();
-  const worldAreas = getWorldProgress();
-  const characters = getCharacterProgress();
+export default async function ChildHomePage() {
+  const [profile, stats, tasks, worldAreas, characters] = await Promise.all([
+    getProfile(),
+    getStats(),
+    getTodayTasks(),
+    getWorldProgress(),
+    getCharacterProgress()
+  ]);
   const nextClaim = tasks.find((task) => task.status === "READY_TO_CLAIM");
+  const nextWorld = worldAreas.find((area) => area.state !== "UNLOCKED");
 
   return (
     <div className="soft-grid" style={{ gap: 20 }}>
@@ -51,7 +54,7 @@ export default function ChildHomePage() {
           ) : (
             <div className="task-card">
               <div className="mini-label">下一步誘惑</div>
-              <strong>{worldAreas.find((area) => area.state !== "已開啟")?.unlockHint ?? "再完成一些任務，就會有更多驚喜。"}</strong>
+              <strong>{nextWorld?.unlockHint ?? "再完成一些任務，就會有更多驚喜。"}</strong>
             </div>
           )}
         </div>
@@ -76,7 +79,7 @@ export default function ChildHomePage() {
             </div>
             <div className="stat-badge">
               <div className="mini-label">下一區域</div>
-              <div style={{ fontWeight: 800, fontSize: "1.2rem" }}>{worldAreas.find((area) => area.state !== "已開啟")?.name ?? "全部開啟"}</div>
+              <div style={{ fontWeight: 800, fontSize: "1.2rem" }}>{nextWorld?.name ?? "全部開啟"}</div>
             </div>
           </div>
         </div>
@@ -123,4 +126,3 @@ function statusLabel(status: string) {
       return "未開始";
   }
 }
-

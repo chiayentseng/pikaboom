@@ -1,11 +1,10 @@
-﻿import { SectionCard } from "@/components/section-card";
+import { SectionCard } from "@/components/section-card";
 import { getProfile, getStats } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ChildAchievementsPage() {
-  const profile = getProfile();
-  const stats = getStats();
+export default async function ChildAchievementsPage() {
+  const [profile, stats] = await Promise.all([getProfile(), getStats()]);
 
   return (
     <SectionCard eyebrow="Milestones" title="成就與連續紀錄" description="這一頁先用真實 streak、累積領獎與完成率，承接之後的週挑戰與成就系統。">
@@ -29,4 +28,3 @@ export default function ChildAchievementsPage() {
     </SectionCard>
   );
 }
-

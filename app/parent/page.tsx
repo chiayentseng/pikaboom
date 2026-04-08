@@ -1,10 +1,10 @@
-﻿import { SectionCard } from "@/components/section-card";
+import { SectionCard } from "@/components/section-card";
 import { getStats } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ParentHomePage() {
-  const stats = getStats();
+export default async function ParentHomePage() {
+  const stats = await getStats();
 
   return (
     <div className="soft-grid" style={{ gap: 20 }}>
@@ -49,4 +49,3 @@ export default function ParentHomePage() {
     </div>
   );
 }
-

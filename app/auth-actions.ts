@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAppMode } from "@/lib/config/runtime";
-import { authCookieNames } from "@/lib/auth/session";
+import { authCookieNames, getAppSession } from "@/lib/auth/session";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function signInParentAction(formData: FormData) {
@@ -48,11 +48,15 @@ export async function signOutAction() {
 
 export async function enterChildModeAction() {
   const cookieStore = await cookies();
-  cookieStore.set(authCookieNames.actingChild, "local-child-profile", {
+  const session = await getAppSession();
+
+  const nextChildId = session.childProfileId ?? "local-child-profile";
+  cookieStore.set(authCookieNames.actingChild, nextChildId, {
     httpOnly: true,
     sameSite: "lax",
     path: "/"
   });
+
   redirect("/child");
 }
 

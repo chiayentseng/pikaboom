@@ -1,7 +1,9 @@
 import type {
   CharacterProgress,
+  GameId,
   PendingReview,
   ProfileSummary,
+  SessionContext,
   StatsSummary,
   TaskTemplateInput,
   TaskTemplateRecord,
@@ -10,17 +12,19 @@ import type {
 } from "@/lib/types/game";
 
 export interface GameRepository {
-  getProfile(): ProfileSummary;
-  getTodayTasks(): TodayTask[];
-  getStats(): StatsSummary;
-  getWorldProgress(): WorldProgress[];
-  getCharacterProgress(): CharacterProgress[];
-  getPendingReviews(): PendingReview[];
-  getTaskTemplates(): TaskTemplateRecord[];
-  createTask(input: TaskTemplateInput): void;
-  toggleTask(taskId: number): void;
-  submitTask(logId: number): void;
-  approveTask(logId: number): void;
-  rejectTask(logId: number, reason: string): void;
-  claimTask(logId: number): void;
+  getProfile(): Promise<ProfileSummary>;
+  getTodayTasks(): Promise<TodayTask[]>;
+  getStats(): Promise<StatsSummary>;
+  getWorldProgress(): Promise<WorldProgress[]>;
+  getCharacterProgress(): Promise<CharacterProgress[]>;
+  getPendingReviews(): Promise<PendingReview[]>;
+  getTaskTemplates(): Promise<TaskTemplateRecord[]>;
+  createTask(input: TaskTemplateInput): Promise<void>;
+  toggleTask(taskId: GameId): Promise<void>;
+  submitTask(logId: GameId): Promise<void>;
+  approveTask(logId: GameId): Promise<void>;
+  rejectTask(logId: GameId, reason: string): Promise<void>;
+  claimTask(logId: GameId): Promise<void>;
 }
+
+export type GameRepositoryFactory = (session: SessionContext) => GameRepository;

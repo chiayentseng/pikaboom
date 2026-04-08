@@ -1,4 +1,4 @@
-﻿"use server";
+"use server";
 
 import { revalidatePath } from "next/cache";
 import {
@@ -16,8 +16,12 @@ function toNumber(value: FormDataEntryValue | null, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+function readId(value: FormDataEntryValue | null) {
+  return String(value ?? "").trim();
+}
+
 export async function createTaskAction(formData: FormData) {
-  createTask({
+  await createTask({
     title: String(formData.get("title") ?? "").trim() || "未命名任務",
     category: String(formData.get("category") ?? "自訂"),
     icon: String(formData.get("icon") ?? "⭐"),
@@ -39,13 +43,13 @@ export async function createTaskAction(formData: FormData) {
 }
 
 export async function toggleTaskAction(formData: FormData) {
-  toggleTask(toNumber(formData.get("taskId")));
+  await toggleTask(readId(formData.get("taskId")));
   revalidatePath("/child/tasks");
   revalidatePath("/parent/tasks");
 }
 
 export async function submitTaskAction(formData: FormData) {
-  submitTask(toNumber(formData.get("logId")));
+  await submitTask(readId(formData.get("logId")));
   revalidatePath("/");
   revalidatePath("/child");
   revalidatePath("/child/tasks");
@@ -54,7 +58,7 @@ export async function submitTaskAction(formData: FormData) {
 }
 
 export async function approveTaskAction(formData: FormData) {
-  approveTask(toNumber(formData.get("logId")));
+  await approveTask(readId(formData.get("logId")));
   revalidatePath("/child");
   revalidatePath("/child/tasks");
   revalidatePath("/parent");
@@ -62,13 +66,13 @@ export async function approveTaskAction(formData: FormData) {
 }
 
 export async function rejectTaskAction(formData: FormData) {
-  rejectTask(toNumber(formData.get("logId")), String(formData.get("reason") ?? "").trim());
+  await rejectTask(readId(formData.get("logId")), String(formData.get("reason") ?? "").trim());
   revalidatePath("/child/tasks");
   revalidatePath("/parent/review");
 }
 
 export async function claimTaskAction(formData: FormData) {
-  claimTask(toNumber(formData.get("logId")));
+  await claimTask(readId(formData.get("logId")));
   revalidatePath("/");
   revalidatePath("/child");
   revalidatePath("/child/tasks");

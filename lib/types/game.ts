@@ -1,8 +1,21 @@
-export type EnergyType = "智慧能量" | "音樂能量" | "活力能量" | "愛心能量" | "星星碎片";
+export type GameId = string;
 
-export type TaskLifecycleStatus = "NOT_STARTED" | "SUBMITTED" | "READY_TO_CLAIM" | "CLAIMED" | "REJECTED";
+export type EnergyType =
+  | "智慧能量"
+  | "音樂能量"
+  | "活力能量"
+  | "愛心能量"
+  | "星星碎片";
+
+export type TaskLifecycleStatus =
+  | "NOT_STARTED"
+  | "SUBMITTED"
+  | "READY_TO_CLAIM"
+  | "CLAIMED"
+  | "REJECTED";
 
 export type ProfileSummary = {
+  id: GameId;
   name: string;
   totalExp: number;
   level: number;
@@ -14,8 +27,8 @@ export type ProfileSummary = {
 };
 
 export type TodayTask = {
-  logId: number;
-  taskId: number;
+  logId: GameId;
+  taskId: GameId;
   title: string;
   category: string;
   icon: string;
@@ -33,7 +46,7 @@ export type TodayTask = {
 };
 
 export type TaskTemplateRecord = {
-  id: number;
+  id: GameId;
   title: string;
   category: string;
   icon: string;
@@ -63,13 +76,15 @@ export type CharacterProgress = {
   unlockExp: number;
 };
 
+export type WorldProgressState = "LOCKED" | "IN_PROGRESS" | "UNLOCKED";
+
 export type WorldProgress = {
   id: string;
   name: string;
   theme: string;
   unlockTarget: number;
   progress: number;
-  state: "已開啟" | "建造中" | "尚未解鎖";
+  state: WorldProgressState;
   unlockHint: string;
 };
 
@@ -84,7 +99,7 @@ export type StatsSummary = {
 };
 
 export type PendingReview = {
-  id: number;
+  id: GameId;
   taskTitle: string;
   category: string;
   icon: string;

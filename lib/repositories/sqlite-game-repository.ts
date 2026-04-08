@@ -2,8 +2,10 @@ import fs from "node:fs";
 import path from "node:path";
 import Database from "better-sqlite3";
 import { characterDefinitions, levelFromExp, titleFromLevel, worldDefinitions } from "@/lib/domain/game-config";
+import type { GameRepository } from "@/lib/repositories/game-repository";
 import type {
   CharacterProgress,
+  GameId,
   PendingReview,
   ProfileSummary,
   StatsSummary,
@@ -12,7 +14,6 @@ import type {
   TodayTask,
   WorldProgress
 } from "@/lib/types/game";
-import type { GameRepository } from "@/lib/repositories/game-repository";
 
 const dataDir = path.join(process.cwd(), "data");
 const dbPath = path.join(dataDir, "pikaboom.db");
@@ -50,7 +51,9 @@ function openDb() {
 }
 
 function ensureTodayLogs(db: SqliteDb, date = todayKey()) {
-  const tasks = db.prepare("SELECT id, reward_exp, reward_energy_value FROM task_templates WHERE is_active = 1").all() as Array<{
+  const tasks = db
+    .prepare("SELECT id, reward_exp, reward_energy_value FROM task_templates WHERE is_active = 1")
+    .all() as Array<{
     id: number;
     reward_exp: number;
     reward_energy_value: number;
@@ -72,6 +75,7 @@ function ensureTodayLogs(db: SqliteDb, date = todayKey()) {
       });
     }
   });
+
   tx();
 }
 
@@ -82,7 +86,7 @@ function ensureSchema(db: SqliteDb) {
       name TEXT NOT NULL,
       total_exp INTEGER NOT NULL DEFAULT 0,
       level INTEGER NOT NULL DEFAULT 1,
-      title TEXT NOT NULL DEFAULT '小小新芽',
+      title TEXT NOT NULL DEFAULT '起步旅人',
       stars INTEGER NOT NULL DEFAULT 0,
       streak_days INTEGER NOT NULL DEFAULT 0,
       updated_at TEXT NOT NULL
@@ -125,8 +129,8 @@ function ensureSchema(db: SqliteDb) {
   const profileCount = db.prepare("SELECT COUNT(*) AS count FROM child_profile").get() as { count: number };
   if (profileCount.count === 0) {
     db.prepare(
-      "INSERT INTO child_profile (id, name, total_exp, level, title, stars, streak_days, updated_at) VALUES (1, ?, 0, 1, '小小新芽', 0, 0, ?)"
-    ).run("晴晴", nowIso());
+      "INSERT INTO child_profile (id, name, total_exp, level, title, stars, streak_days, updated_at) VALUES (1, ?, 0, 1, '起步旅人', 0, 0, ?)"
+    ).run("小冒險家", nowIso());
   }
 
   const taskCount = db.prepare("SELECT COUNT(*) AS count FROM task_templates").get() as { count: number };
@@ -140,10 +144,58 @@ function ensureSchema(db: SqliteDb) {
 
     const createdAt = nowIso();
     const seedTasks: TaskTemplateInput[] = [
-      { title: "數學練習", category: "學習", icon: "📘", measurementType: "時間", targetValue: 15, unit: "分鐘", repeatLabel: "每日", rewardExp: 12, rewardEnergyType: "智慧能量", rewardEnergyValue: 10, requiresApproval: false },
-      { title: "鋼琴練習", category: "才藝", icon: "🎹", measurementType: "時間", targetValue: 20, unit: "分鐘", repeatLabel: "每週一三五", rewardExp: 16, rewardEnergyType: "音樂能量", rewardEnergyValue: 12, requiresApproval: true },
-      { title: "晚安閱讀", category: "閱讀", icon: "📚", measurementType: "一次", targetValue: 1, unit: "次", repeatLabel: "每日", rewardExp: 8, rewardEnergyType: "智慧能量", rewardEnergyValue: 6, requiresApproval: false },
-      { title: "刷牙收尾", category: "生活習慣", icon: "🪥", measurementType: "次數", targetValue: 2, unit: "次", repeatLabel: "每日", rewardExp: 6, rewardEnergyType: "愛心能量", rewardEnergyValue: 8, requiresApproval: true }
+      {
+        title: "閱讀故事書",
+        category: "閱讀",
+        icon: "📚",
+        measurementType: "時間",
+        targetValue: 15,
+        unit: "分鐘",
+        repeatLabel: "每日",
+        rewardExp: 12,
+        rewardEnergyType: "智慧能量",
+        rewardEnergyValue: 10,
+        requiresApproval: false
+      },
+      {
+        title: "鋼琴練習",
+        category: "才藝",
+        icon: "🎹",
+        measurementType: "時間",
+        targetValue: 20,
+        unit: "分鐘",
+        repeatLabel: "每週三次",
+        rewardExp: 16,
+        rewardEnergyType: "音樂能量",
+        rewardEnergyValue: 12,
+        requiresApproval: true
+      },
+      {
+        title: "整理書包",
+        category: "生活習慣",
+        icon: "🎒",
+        measurementType: "一次",
+        targetValue: 1,
+        unit: "次",
+        repeatLabel: "每日",
+        rewardExp: 8,
+        rewardEnergyType: "愛心能量",
+        rewardEnergyValue: 6,
+        requiresApproval: false
+      },
+      {
+        title: "跳繩運動",
+        category: "運動",
+        icon: "🏃",
+        measurementType: "次數",
+        targetValue: 2,
+        unit: "回合",
+        repeatLabel: "每日",
+        rewardExp: 6,
+        rewardEnergyType: "活力能量",
+        rewardEnergyValue: 8,
+        requiresApproval: true
+      }
     ];
 
     const tx = db.transaction(() => {
@@ -164,6 +216,7 @@ function ensureSchema(db: SqliteDb) {
         });
       }
     });
+
     tx();
   }
 
@@ -175,14 +228,24 @@ function getDb() {
     global.__pikaboomSqliteDb = openDb();
     ensureSchema(global.__pikaboomSqliteDb);
   }
+
   return global.__pikaboomSqliteDb;
+}
+
+function toGameId(value: number) {
+  return String(value);
+}
+
+function toSqliteId(value: GameId) {
+  return Number(value);
 }
 
 export class SqliteGameRepository implements GameRepository {
   private readonly db = getDb();
 
-  getProfile(): ProfileSummary {
+  async getProfile(): Promise<ProfileSummary> {
     const profile = this.db.prepare("SELECT * FROM child_profile WHERE id = 1").get() as {
+      id: number;
       name: string;
       total_exp: number;
       level: number;
@@ -191,12 +254,23 @@ export class SqliteGameRepository implements GameRepository {
       streak_days: number;
     };
     const levelInfo = levelFromExp(profile.total_exp);
-    return { name: profile.name, totalExp: profile.total_exp, level: profile.level, title: profile.title, stars: profile.stars, streakDays: profile.streak_days, currentLevelExp: levelInfo.currentLevelExp, nextLevelExp: levelInfo.nextLevelExp };
+
+    return {
+      id: toGameId(profile.id),
+      name: profile.name,
+      totalExp: profile.total_exp,
+      level: profile.level,
+      title: profile.title,
+      stars: profile.stars,
+      streakDays: profile.streak_days,
+      currentLevelExp: levelInfo.currentLevelExp,
+      nextLevelExp: levelInfo.nextLevelExp
+    };
   }
 
-  getTodayTasks(): TodayTask[] {
+  async getTodayTasks(): Promise<TodayTask[]> {
     ensureTodayLogs(this.db);
-    return this.db.prepare(`
+    const rows = this.db.prepare(`
       SELECT l.id AS logId, t.id AS taskId, t.title, t.category, t.icon,
         t.measurement_type AS measurementType, t.target_value AS targetValue, t.unit, t.repeat_label AS repeatLabel,
         l.reward_exp_snapshot AS rewardExp, t.reward_energy_type AS rewardEnergyType, l.reward_energy_value_snapshot AS rewardEnergyValue,
@@ -211,113 +285,230 @@ export class SqliteGameRepository implements GameRepository {
         WHEN 'SUBMITTED' THEN 3
         WHEN 'CLAIMED' THEN 4
         ELSE 5 END, t.id
-    `).all(todayKey()) as TodayTask[];
+    `).all(todayKey()) as Array<{
+      logId: number;
+      taskId: number;
+      title: string;
+      category: string;
+      icon: string;
+      measurementType: string;
+      targetValue: number;
+      unit: string;
+      repeatLabel: string;
+      rewardExp: number;
+      rewardEnergyType: TodayTask["rewardEnergyType"];
+      rewardEnergyValue: number;
+      requiresApproval: number;
+      status: TodayTask["status"];
+      progressValue: number;
+      rejectionReason: string | null;
+    }>;
+
+    return rows.map((row) => ({
+      ...row,
+      logId: toGameId(row.logId),
+      taskId: toGameId(row.taskId),
+      requiresApproval: Boolean(row.requiresApproval)
+    }));
   }
 
-  getStats(): StatsSummary {
+  async getStats(): Promise<StatsSummary> {
     ensureTodayLogs(this.db);
     const totalClaimed = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE status = 'CLAIMED'").get() as { count: number }).count;
     const pendingApprovals = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE status = 'SUBMITTED'").get() as { count: number }).count;
     const todayClaimed = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE log_date = ? AND status = 'CLAIMED'").get(todayKey()) as { count: number }).count;
     const totalTasks = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE log_date = ?").get(todayKey()) as { count: number }).count;
-    const weeklyCompletion = (this.db.prepare(`SELECT COUNT(*) AS count FROM task_logs WHERE status = 'CLAIMED' AND log_date >= date('now', '-6 day')`).get() as { count: number }).count;
-    const weeklyTotal = (this.db.prepare(`SELECT COUNT(*) AS count FROM task_logs WHERE log_date >= date('now', '-6 day')`).get() as { count: number }).count;
+    const weeklyCompletion = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE status = 'CLAIMED' AND log_date >= date('now', '-6 day')").get() as { count: number }).count;
+    const weeklyTotal = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE log_date >= date('now', '-6 day')").get() as { count: number }).count;
     const categoryRows = this.db.prepare(`
       SELECT t.category AS category, COUNT(*) AS count
-      FROM task_logs l JOIN task_templates t ON t.id = l.task_template_id
+      FROM task_logs l
+      JOIN task_templates t ON t.id = l.task_template_id
       WHERE l.status = 'CLAIMED'
       GROUP BY t.category
       ORDER BY count DESC
     `).all() as Array<{ category: string; count: number }>;
 
-    return { totalClaimed, pendingApprovals, todayClaimed, totalTasks, weeklyCompletion, completionRate: weeklyTotal === 0 ? 0 : Math.round((weeklyCompletion / weeklyTotal) * 100), topCategory: categoryRows[0]?.category ?? "尚未開始" };
+    return {
+      totalClaimed,
+      pendingApprovals,
+      todayClaimed,
+      totalTasks,
+      weeklyCompletion,
+      completionRate: weeklyTotal === 0 ? 0 : Math.round((weeklyCompletion / weeklyTotal) * 100),
+      topCategory: categoryRows[0]?.category ?? "尚未開始"
+    };
   }
 
-  getWorldProgress(): WorldProgress[] {
-    const stats = this.getStats();
+  async getWorldProgress(): Promise<WorldProgress[]> {
+    const stats = await this.getStats();
+
     return worldDefinitions.map((world, index) => {
       const previousTarget = index === 0 ? 0 : worldDefinitions[index - 1]!.unlockTarget;
       const segmentTotal = world.unlockTarget - previousTarget;
       const progressInSegment = Math.max(0, Math.min(segmentTotal, stats.totalClaimed - previousTarget));
       const progress = Math.round((progressInSegment / segmentTotal) * 100);
-      const state: WorldProgress["state"] = stats.totalClaimed >= world.unlockTarget ? "已開啟" : index === 0 || stats.totalClaimed >= previousTarget ? "建造中" : "尚未解鎖";
-      return { ...world, progress, state, unlockHint: state === "已開啟" ? "已經可以在這一區繼續推進。" : `還差 ${Math.max(0, world.unlockTarget - stats.totalClaimed)} 次領獎就能解鎖。` };
+      const state: WorldProgress["state"] =
+        stats.totalClaimed >= world.unlockTarget ? "UNLOCKED" : index === 0 || stats.totalClaimed >= previousTarget ? "IN_PROGRESS" : "LOCKED";
+
+      return {
+        ...world,
+        progress,
+        state,
+        unlockHint:
+          state === "UNLOCKED"
+            ? "這個區域已經開啟，可以繼續朝下一區前進。"
+            : `還差 ${Math.max(0, world.unlockTarget - stats.totalClaimed)} 次完成就能解鎖。`
+      };
     });
   }
 
-  getCharacterProgress(): CharacterProgress[] {
-    const profile = this.getProfile();
+  async getCharacterProgress(): Promise<CharacterProgress[]> {
+    const profile = await this.getProfile();
+
     return characterDefinitions.map((character) => {
       const unlocked = profile.totalExp >= character.unlockExp && (character.streakRequired ? profile.streakDays >= character.streakRequired : true);
       const growth = unlocked ? Math.min(100, Math.max(12, profile.totalExp - character.unlockExp)) : 0;
-      return { ...character, unlocked, growth, goal: 100, stage: unlocked ? (growth >= 80 ? "成長期" : "幼年") : "未解鎖", unlockHint: unlocked ? undefined : character.streakRequired ? `需要 ${character.unlockExp} EXP 並連續 ${character.streakRequired} 天完成任務` : `需要累積 ${character.unlockExp} EXP` };
+
+      return {
+        ...character,
+        unlocked,
+        growth,
+        goal: 100,
+        stage: unlocked ? (growth >= 80 ? "進化中" : "成長中") : "未解鎖",
+        unlockHint: unlocked
+          ? undefined
+          : character.streakRequired
+            ? `需要 ${character.unlockExp} EXP，並維持 ${character.streakRequired} 天連續完成。`
+            : `累積 ${character.unlockExp} EXP 後解鎖。`
+      };
     });
   }
 
-  getPendingReviews(): PendingReview[] {
-    return this.db.prepare(`
+  async getPendingReviews(): Promise<PendingReview[]> {
+    const rows = this.db.prepare(`
       SELECT l.id, t.title AS taskTitle, t.category, t.icon, l.submitted_at AS submittedAt, l.progress_value AS progressValue, t.target_value AS targetValue, t.unit
-      FROM task_logs l JOIN task_templates t ON t.id = l.task_template_id
+      FROM task_logs l
+      JOIN task_templates t ON t.id = l.task_template_id
       WHERE l.status = 'SUBMITTED'
       ORDER BY l.submitted_at ASC
-    `).all() as PendingReview[];
+    `).all() as Array<{
+      id: number;
+      taskTitle: string;
+      category: string;
+      icon: string;
+      submittedAt: string;
+      progressValue: number;
+      targetValue: number;
+      unit: string;
+    }>;
+
+    return rows.map((row) => ({ ...row, id: toGameId(row.id) }));
   }
 
-  getTaskTemplates(): TaskTemplateRecord[] {
-    return this.db.prepare(`
+  async getTaskTemplates(): Promise<TaskTemplateRecord[]> {
+    const rows = this.db.prepare(`
       SELECT id, title, category, icon, measurement_type AS measurementType, target_value AS targetValue, unit, repeat_label AS repeatLabel,
         reward_exp AS rewardExp, reward_energy_type AS rewardEnergyType, reward_energy_value AS rewardEnergyValue, requires_approval AS requiresApproval, is_active AS isActive
       FROM task_templates
       ORDER BY is_active DESC, id DESC
-    `).all().map((row) => ({
-      ...(row as Omit<TaskTemplateRecord, "requiresApproval" | "isActive"> & { requiresApproval: number; isActive: number }),
-      requiresApproval: Boolean((row as { requiresApproval: number }).requiresApproval),
-      isActive: Boolean((row as { isActive: number }).isActive)
+    `).all() as Array<{
+      id: number;
+      title: string;
+      category: string;
+      icon: string;
+      measurementType: string;
+      targetValue: number;
+      unit: string;
+      repeatLabel: string;
+      rewardExp: number;
+      rewardEnergyType: TaskTemplateRecord["rewardEnergyType"];
+      rewardEnergyValue: number;
+      requiresApproval: number;
+      isActive: number;
+    }>;
+
+    return rows.map((row) => ({
+      ...row,
+      id: toGameId(row.id),
+      requiresApproval: Boolean(row.requiresApproval),
+      isActive: Boolean(row.isActive)
     }));
   }
 
-  createTask(input: TaskTemplateInput) {
+  async createTask(input: TaskTemplateInput): Promise<void> {
     this.db.prepare(`
       INSERT INTO task_templates
       (title, category, icon, measurement_type, target_value, unit, repeat_label, reward_exp, reward_energy_type, reward_energy_value, requires_approval, is_active, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
-    `).run(input.title, input.category, input.icon, input.measurementType, input.targetValue, input.unit, input.repeatLabel, input.rewardExp, input.rewardEnergyType, input.rewardEnergyValue, input.requiresApproval ? 1 : 0, nowIso());
+    `).run(
+      input.title,
+      input.category,
+      input.icon,
+      input.measurementType,
+      input.targetValue,
+      input.unit,
+      input.repeatLabel,
+      input.rewardExp,
+      input.rewardEnergyType,
+      input.rewardEnergyValue,
+      input.requiresApproval ? 1 : 0,
+      nowIso()
+    );
+
     ensureTodayLogs(this.db);
   }
 
-  toggleTask(taskId: number) {
-    this.db.prepare("UPDATE task_templates SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?").run(taskId);
+  async toggleTask(taskId: GameId): Promise<void> {
+    this.db.prepare("UPDATE task_templates SET is_active = CASE WHEN is_active = 1 THEN 0 ELSE 1 END WHERE id = ?").run(toSqliteId(taskId));
     ensureTodayLogs(this.db);
   }
 
-  submitTask(logId: number) {
+  async submitTask(logId: GameId): Promise<void> {
     const log = this.db.prepare(`
       SELECT l.id, l.status, t.target_value AS targetValue, t.requires_approval AS requiresApproval
-      FROM task_logs l JOIN task_templates t ON t.id = l.task_template_id
+      FROM task_logs l
+      JOIN task_templates t ON t.id = l.task_template_id
       WHERE l.id = ?
-    `).get(logId) as { id: number; status: string; targetValue: number; requiresApproval: number } | undefined;
-    if (!log || !["NOT_STARTED", "REJECTED"].includes(log.status)) return;
-    this.db.prepare(`UPDATE task_logs SET status = ?, progress_value = ?, submitted_at = ?, rejection_reason = NULL WHERE id = ?`).run(log.requiresApproval ? "SUBMITTED" : "READY_TO_CLAIM", log.targetValue, nowIso(), logId);
+    `).get(toSqliteId(logId)) as { id: number; status: string; targetValue: number; requiresApproval: number } | undefined;
+
+    if (!log || !["NOT_STARTED", "REJECTED"].includes(log.status)) {
+      return;
+    }
+
+    this.db.prepare("UPDATE task_logs SET status = ?, progress_value = ?, submitted_at = ?, rejection_reason = NULL WHERE id = ?").run(
+      log.requiresApproval ? "SUBMITTED" : "READY_TO_CLAIM",
+      log.targetValue,
+      nowIso(),
+      toSqliteId(logId)
+    );
   }
 
-  approveTask(logId: number) {
-    this.db.prepare("UPDATE task_logs SET status = 'READY_TO_CLAIM', approved_at = ? WHERE id = ? AND status = 'SUBMITTED'").run(nowIso(), logId);
+  async approveTask(logId: GameId): Promise<void> {
+    this.db.prepare("UPDATE task_logs SET status = 'READY_TO_CLAIM', approved_at = ? WHERE id = ? AND status = 'SUBMITTED'").run(nowIso(), toSqliteId(logId));
   }
 
-  rejectTask(logId: number, reason: string) {
-    this.db.prepare("UPDATE task_logs SET status = 'REJECTED', rejection_reason = ? WHERE id = ? AND status = 'SUBMITTED'").run(reason || "請再確認一次", logId);
+  async rejectTask(logId: GameId, reason: string): Promise<void> {
+    this.db.prepare("UPDATE task_logs SET status = 'REJECTED', rejection_reason = ? WHERE id = ? AND status = 'SUBMITTED'").run(reason || "請再確認一次", toSqliteId(logId));
   }
 
-  claimTask(logId: number) {
+  async claimTask(logId: GameId): Promise<void> {
     const log = this.db.prepare(`
       SELECT id, log_date AS logDate, reward_exp_snapshot AS rewardExp, reward_energy_value_snapshot AS rewardEnergyValue
-      FROM task_logs WHERE id = ? AND status = 'READY_TO_CLAIM'
-    `).get(logId) as { id: number; logDate: string; rewardExp: number; rewardEnergyValue: number } | undefined;
-    if (!log) return;
+      FROM task_logs
+      WHERE id = ? AND status = 'READY_TO_CLAIM'
+    `).get(toSqliteId(logId)) as { id: number; logDate: string; rewardExp: number; rewardEnergyValue: number } | undefined;
 
-    const profile = this.getProfile();
-    const hadClaimedSameDay = (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE log_date = ? AND status = 'CLAIMED'").get(log.logDate) as { count: number }).count > 0;
-    const lastClaimed = this.db.prepare("SELECT log_date AS logDate FROM task_logs WHERE status = 'CLAIMED' ORDER BY log_date DESC LIMIT 1").get() as { logDate: string } | undefined;
+    if (!log) {
+      return;
+    }
+
+    const profile = await this.getProfile();
+    const hadClaimedSameDay =
+      (this.db.prepare("SELECT COUNT(*) AS count FROM task_logs WHERE log_date = ? AND status = 'CLAIMED'").get(log.logDate) as { count: number }).count > 0;
+    const lastClaimed = this.db.prepare("SELECT log_date AS logDate FROM task_logs WHERE status = 'CLAIMED' ORDER BY log_date DESC LIMIT 1").get() as
+      | { logDate: string }
+      | undefined;
 
     let nextStreak = profile.streakDays;
     if (!hadClaimedSameDay) {
@@ -330,13 +521,14 @@ export class SqliteGameRepository implements GameRepository {
     const levelInfo = levelFromExp(nextTotalExp);
 
     const tx = this.db.transaction(() => {
-      this.db.prepare("UPDATE task_logs SET status = 'CLAIMED', claimed_at = ? WHERE id = ?").run(nowIso(), logId);
+      this.db.prepare("UPDATE task_logs SET status = 'CLAIMED', claimed_at = ? WHERE id = ?").run(nowIso(), toSqliteId(logId));
       this.db.prepare(`
         UPDATE child_profile
         SET total_exp = ?, level = ?, title = ?, stars = stars + ?, streak_days = ?, updated_at = ?
         WHERE id = 1
       `).run(nextTotalExp, levelInfo.level, titleFromLevel(levelInfo.level), log.rewardEnergyValue, nextStreak, nowIso());
     });
+
     tx();
   }
 }

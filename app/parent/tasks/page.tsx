@@ -1,11 +1,11 @@
-﻿import { createTaskAction, toggleTaskAction } from "@/app/actions";
+import { createTaskAction, toggleTaskAction } from "@/app/actions";
 import { SectionCard } from "@/components/section-card";
 import { getTaskTemplates } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ParentTasksPage() {
-  const tasks = getTaskTemplates();
+export default async function ParentTasksPage() {
+  const tasks = await getTaskTemplates();
 
   return (
     <div className="soft-grid" style={{ gap: 20 }}>
@@ -102,7 +102,9 @@ export default function ParentTasksPage() {
                 <div style={{ fontWeight: 800 }}>
                   {task.icon} {task.title}
                 </div>
-                <div style={{ color: "var(--muted)" }}>{task.measurementType} · {task.targetValue} {task.unit}</div>
+                <div style={{ color: "var(--muted)" }}>
+                  {task.measurementType} · {task.targetValue} {task.unit}
+                </div>
               </div>
               <div>{task.category}</div>
               <div>{task.repeatLabel}</div>
@@ -122,4 +124,3 @@ export default function ParentTasksPage() {
     </div>
   );
 }
-

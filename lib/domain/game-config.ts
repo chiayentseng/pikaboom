@@ -3,8 +3,8 @@ import type { CharacterProgress, EnergyType } from "@/lib/types/game";
 export const energyPalette: Record<EnergyType, string> = {
   智慧能量: "📘",
   音樂能量: "🎵",
-  活力能量: "⚽",
-  愛心能量: "💗",
+  活力能量: "⚡",
+  愛心能量: "💖",
   星星碎片: "✨"
 };
 
@@ -12,19 +12,19 @@ export const worldDefinitions = [
   {
     id: "meadow",
     name: "新手草原",
-    theme: "每天完成任務就會長出新的花徑",
+    theme: "從小草坡開始，看著花朵與小路慢慢長出來。",
     unlockTarget: 4
   },
   {
     id: "forest",
     name: "知識森林",
-    theme: "閱讀與學習會點亮蘑菇路燈",
+    theme: "閱讀、學習與探索的能量會點亮這片森林。",
     unlockTarget: 10
   },
   {
     id: "valley",
     name: "音樂山谷",
-    theme: "鋼琴與舞蹈會喚醒風鈴花",
+    theme: "才藝與節奏感會讓山谷出現新的舞台與光芒。",
     unlockTarget: 18
   }
 ] as const;
@@ -36,9 +36,9 @@ export const characterDefinitions: Array<
 > = [
   {
     id: "sprout",
-    name: "小松果",
-    emoji: "🌰",
-    rarity: "常見",
+    name: "小芽芽",
+    emoji: "🌱",
+    rarity: "普通",
     unlockExp: 0,
     growthEnergy: "智慧能量"
   },
@@ -81,8 +81,8 @@ export function levelFromExp(exp: number) {
 
 export function titleFromLevel(level: number) {
   if (level >= 12) return "星光訓練師";
-  if (level >= 8) return "森林守護者";
-  if (level >= 5) return "成長探索者";
-  if (level >= 3) return "冒險學徒";
-  return "小小新芽";
+  if (level >= 8) return "成長探索者";
+  if (level >= 5) return "冒險學徒";
+  if (level >= 3) return "小小新芽";
+  return "起步旅人";
 }

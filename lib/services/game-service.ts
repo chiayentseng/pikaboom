@@ -1,60 +1,67 @@
-import { getLocalSessionContext } from "@/lib/auth/access-model";
+import { getAppMode } from "@/lib/config/runtime";
+import { getAppSession } from "@/lib/auth/session";
 import { getSqliteGameRepository } from "@/lib/repositories/sqlite-game-repository";
+import { canUseSupabaseGameRepository, getSupabaseGameRepository } from "@/lib/repositories/supabase-game-repository";
 import type { TaskTemplateInput } from "@/lib/types/game";
 
-function getRepository() {
+async function getRepository() {
+  const session = await getAppSession();
+
+  if (getAppMode() === "supabase" && canUseSupabaseGameRepository(session)) {
+    return getSupabaseGameRepository(session);
+  }
+
   return getSqliteGameRepository();
 }
 
-export function getProfile() {
-  return getRepository().getProfile();
+export async function getProfile() {
+  return (await getRepository()).getProfile();
 }
 
-export function getTodayTasks() {
-  getLocalSessionContext();
-  return getRepository().getTodayTasks();
+export async function getTodayTasks() {
+  return (await getRepository()).getTodayTasks();
 }
 
-export function getStats() {
-  return getRepository().getStats();
+export async function getStats() {
+  return (await getRepository()).getStats();
 }
 
-export function getWorldProgress() {
-  return getRepository().getWorldProgress();
+export async function getWorldProgress() {
+  return (await getRepository()).getWorldProgress();
 }
 
-export function getCharacterProgress() {
-  return getRepository().getCharacterProgress();
+export async function getCharacterProgress() {
+  return (await getRepository()).getCharacterProgress();
 }
 
-export function getPendingReviews() {
-  return getRepository().getPendingReviews();
+export async function getPendingReviews() {
+  return (await getRepository()).getPendingReviews();
 }
 
-export function getTaskTemplates() {
-  return getRepository().getTaskTemplates();
+export async function getTaskTemplates() {
+  return (await getRepository()).getTaskTemplates();
 }
 
-export function createTask(input: TaskTemplateInput) {
-  return getRepository().createTask(input);
+export async function createTask(input: TaskTemplateInput) {
+  return (await getRepository()).createTask(input);
 }
 
-export function toggleTask(taskId: number) {
-  return getRepository().toggleTask(taskId);
+export async function toggleTask(taskId: string) {
+  return (await getRepository()).toggleTask(taskId);
 }
 
-export function submitTask(logId: number) {
-  return getRepository().submitTask(logId);
+export async function submitTask(logId: string) {
+  return (await getRepository()).submitTask(logId);
 }
 
-export function approveTask(logId: number) {
-  return getRepository().approveTask(logId);
+export async function approveTask(logId: string) {
+  return (await getRepository()).approveTask(logId);
 }
 
-export function rejectTask(logId: number, reason: string) {
-  return getRepository().rejectTask(logId, reason);
+export async function rejectTask(logId: string, reason: string) {
+  return (await getRepository()).rejectTask(logId, reason);
 }
 
-export function claimTask(logId: number) {
-  return getRepository().claimTask(logId);
+export async function claimTask(logId: string) {
+  return (await getRepository()).claimTask(logId);
 }

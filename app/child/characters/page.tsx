@@ -1,10 +1,10 @@
-﻿import { SectionCard } from "@/components/section-card";
+import { SectionCard } from "@/components/section-card";
 import { getCharacterProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ChildCharactersPage() {
-  const characters = getCharacterProgress();
+export default async function ChildCharactersPage() {
+  const characters = await getCharacterProgress();
 
   return (
     <SectionCard
@@ -40,4 +40,3 @@ export default function ChildCharactersPage() {
     </SectionCard>
   );
 }
-

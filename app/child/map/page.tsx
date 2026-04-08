@@ -1,10 +1,10 @@
-﻿import { SectionCard } from "@/components/section-card";
+import { SectionCard } from "@/components/section-card";
 import { getWorldProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ChildMapPage() {
-  const worldAreas = getWorldProgress();
+export default async function ChildMapPage() {
+  const worldAreas = await getWorldProgress();
 
   return (
     <SectionCard eyebrow="World" title="地圖與世界變化" description="區域進度現在跟著已領獎任務次數推進，孩子每完成一次都會更接近下一塊地圖。">
@@ -23,7 +23,7 @@ export default function ChildMapPage() {
             <article key={area.id} className="task-card">
               <div className="task-topline">
                 <div>
-                  <div className="mini-label">{area.state}</div>
+                  <div className="mini-label">{worldStateLabel(area.state)}</div>
                   <div style={{ fontSize: "1.2rem", fontWeight: 800 }}>{area.name}</div>
                 </div>
                 <span className="pill">{area.progress}%</span>
@@ -41,3 +41,13 @@ export default function ChildMapPage() {
   );
 }
 
+function worldStateLabel(state: string) {
+  switch (state) {
+    case "UNLOCKED":
+      return "已開啟";
+    case "IN_PROGRESS":
+      return "進行中";
+    default:
+      return "尚未解鎖";
+  }
+}

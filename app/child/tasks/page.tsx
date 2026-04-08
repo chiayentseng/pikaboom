@@ -1,11 +1,11 @@
-﻿import { claimTaskAction, submitTaskAction } from "@/app/actions";
+import { claimTaskAction, submitTaskAction } from "@/app/actions";
 import { SectionCard } from "@/components/section-card";
 import { getTodayTasks } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
-export default function ChildTasksPage() {
-  const tasks = getTodayTasks();
+export default async function ChildTasksPage() {
+  const tasks = await getTodayTasks();
 
   return (
     <SectionCard
@@ -77,4 +77,3 @@ function statusLabel(status: string) {
       return "未開始";
   }
 }
-
