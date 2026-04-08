@@ -1,11 +1,11 @@
-# Auth And Access Plan
+﻿# Auth And Access Plan
 
 ## Recommended Authentication Model
 
 For the first production version:
 
 - Parents authenticate with `Supabase Auth` using email and password.
-- Children do not get independent email-based accounts in MVP.
+- Children do not get independent sign-in flows in the MVP UI.
 - A parent session can switch into child mode inside the app.
 - A child PIN-based quick entry flow can be added later if needed.
 
@@ -14,7 +14,7 @@ This is the lowest-friction approach that still matches the product's ownership 
 ## Why This Model Is Better
 
 - a parent is the real account owner
-- a child should not need email in early versions
+- a child should not need to remember email or password in early versions
 - family setup remains simple
 - support burden stays lower
 - permissions are much easier to reason about
@@ -26,7 +26,7 @@ This is the lowest-friction approach that still matches the product's ownership 
 Can:
 
 - sign in
-- manage household setup
+- complete household setup
 - create and edit task templates
 - approve or reject submitted tasks
 - view reports
@@ -74,3 +74,20 @@ Recommended implementation:
   - parent is authenticated
   - parent belongs to the same household
   - acting child belongs to that household
+
+## Current MVP Compromise
+
+The current schema still models:
+
+- `profiles.id -> auth.users.id`
+- `child_profiles.profile_id -> profiles.id`
+
+That means a child profile still needs a backing auth identity, even though children do not sign in directly in the UI.
+
+Current implementation choice:
+
+- onboarding creates a hidden managed child identity through the Supabase admin API
+- that identity is only there to satisfy the current relational model
+- the product still behaves like parent-owned child mode
+
+This is acceptable for MVP, but a later schema cleanup could make `child_profiles` standalone and remove this requirement.

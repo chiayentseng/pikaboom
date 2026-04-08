@@ -1,4 +1,4 @@
-# PikaBoom
+﻿# PikaBoom
 
 PikaBoom is a web game for families that turns real-world effort into visible progress, character growth, and world-building.
 
@@ -31,6 +31,7 @@ Instead of behaving like a plain checklist, it aims to help a child feel:
 - task management
 - task approval
 - reports view
+- first-run cloud setup page
 
 ### Core System
 
@@ -76,6 +77,7 @@ Then open:
 - `http://127.0.0.1:3000/child`
 - `http://127.0.0.1:3000/parent`
 - `http://127.0.0.1:3000/login`
+- `http://127.0.0.1:3000/setup`
 
 ## Environment Variables
 
@@ -85,6 +87,7 @@ Current behavior:
 
 - `PIKABOOM_APP_MODE=local`: local session + SQLite flow
 - `PIKABOOM_APP_MODE=supabase`: Supabase auth/session enabled and game data will use Supabase when household/profile records are ready
+- `SUPABASE_SERVICE_ROLE_KEY`: required for first-run cloud setup because the current schema still needs a managed child identity
 
 ## Build Check
 
@@ -100,8 +103,8 @@ npm run build
 
 ## Roadmap
 
-1. Household bootstrap and onboarding flow for first real parent account
-2. Full RLS policies and production data isolation
+1. Full RLS policies and production data isolation
+2. Post-signup onboarding polish and setup automation
 3. Photo proof for tasks
 4. Weekly challenges and achievement events
 5. Richer reward animations and progression feedback
@@ -113,4 +116,5 @@ npm run build
 - [Application blueprint](./docs/application-blueprint.md)
 - [Auth and access plan](./docs/auth-and-access-plan.md)
 - [Supabase schema SQL](./docs/supabase-schema.sql)
+- [Supabase bootstrap SQL](./docs/supabase-bootstrap.sql)
 - [Supabase migration status](./docs/supabase-migration-status.md)

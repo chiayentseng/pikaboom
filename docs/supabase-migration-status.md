@@ -1,4 +1,4 @@
-# Supabase Migration Status
+﻿# Supabase Migration Status
 
 ## Current State
 
@@ -12,6 +12,7 @@ Runtime behavior:
 - `PIKABOOM_APP_MODE=supabase`
   - uses Supabase Auth session
   - resolves parent profile, household, and default child profile from Supabase
+  - routes incomplete cloud accounts into `/setup`
   - uses the Supabase repository only when the required household/profile context exists
   - falls back to SQLite when cloud setup is still incomplete
 
@@ -28,11 +29,14 @@ Implemented:
 - resolve `household_members`
 - resolve first available `child_profiles` record
 - support child mode through `acting_child_id` cookie
+- expose onboarding state flags so protected areas can redirect into setup
 
 Files:
 
 - `lib/auth/session.ts`
 - `app/auth-actions.ts`
+- `app/setup/page.tsx`
+- `app/setup-actions.ts`
 
 ### Repository Switching
 
@@ -64,6 +68,22 @@ Implemented in the current Supabase repository:
 - parent pending review list
 - child stats, world progress, and character progress derived from Supabase data
 
+### First-Time Cloud Onboarding
+
+Implemented:
+
+- setup page for the first parent account
+- create / upsert parent profile row
+- create household and parent membership
+- create a managed child identity for MVP compatibility with the current schema
+- create child profile and optional starter task templates
+
+Important note:
+
+- the current schema still requires `child_profiles.profile_id -> profiles.id -> auth.users.id`
+- because of that, onboarding currently creates a hidden managed auth identity for the child
+- this works for MVP, but can be simplified later by decoupling child profiles from auth users
+
 ## Tables Expected
 
 The current code expects these tables to exist in Supabase:
@@ -80,24 +100,23 @@ The current code expects these tables to exist in Supabase:
 Reference schema:
 
 - `docs/supabase-schema.sql`
+- `docs/supabase-bootstrap.sql`
 
 ## Setup Requirement Before Full Cloud Use
 
 Before switching real environments to `PIKABOOM_APP_MODE=supabase`, make sure:
 
 1. Supabase schema has been applied.
-2. At least one parent user exists in `auth.users`.
-3. Matching `profiles` row exists for that parent.
-4. A `households` row exists.
-5. A `household_members` row links the parent to the household.
-6. At least one `child_profiles` row exists in that household.
+2. A parent user can sign in through Supabase Auth.
+3. `SUPABASE_SERVICE_ROLE_KEY` is available server-side so setup can create the first household and child profile.
+4. The first signed-in parent completes `/setup` once.
 
-Without these records, the app will authenticate correctly but intentionally stay on local data fallback.
+After that, the parent console and child mode can stay on Supabase-backed data.
 
 ## Recommended Next Steps
 
-1. Add a bootstrap SQL seed for one demo household and one child.
-2. Add onboarding screens to create household and child records after first sign-in.
-3. Add RLS policies for all household-scoped tables.
+1. Add RLS policies for all household-scoped tables.
+2. Add a post-signup onboarding check so setup opens automatically after auth callback.
+3. Decide whether child profiles should remain managed auth identities or become standalone domain records.
 4. Add integration checks for local mode and Supabase mode.
 5. Move remaining legacy helper files out of the active path once migration is complete.

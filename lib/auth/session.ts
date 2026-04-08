@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+﻿import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getAppMode } from "@/lib/config/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -12,6 +12,9 @@ export type AppSession = SessionContext & {
   email: string | null;
   displayName: string | null;
   mode: "local" | "supabase";
+  hasProfile: boolean;
+  hasHousehold: boolean;
+  hasChildProfile: boolean;
 };
 
 async function resolveSupabaseSession(actingChildId: string | null): Promise<Omit<AppSession, "mode">> {
@@ -29,7 +32,10 @@ async function resolveSupabaseSession(actingChildId: string | null): Promise<Omi
       childProfileId: null,
       actingChildId: null,
       email: null,
-      displayName: null
+      displayName: null,
+      hasProfile: false,
+      hasHousehold: false,
+      hasChildProfile: false
     };
   }
 
@@ -71,7 +77,10 @@ async function resolveSupabaseSession(actingChildId: string | null): Promise<Omi
     childProfileId: defaultChildProfileId,
     actingChildId: resolvedActingChildId,
     email: user.email ?? null,
-    displayName: profile?.display_name ?? (user.user_metadata.display_name as string | undefined) ?? user.email ?? "Parent"
+    displayName: profile?.display_name ?? (user.user_metadata.display_name as string | undefined) ?? user.email ?? "Parent",
+    hasProfile: Boolean(profile),
+    hasHousehold: Boolean(householdId),
+    hasChildProfile: childProfiles.length > 0
   };
 }
 
@@ -99,8 +108,19 @@ export async function getAppSession(): Promise<AppSession> {
     actingChildId: isAuthenticated ? actingChildId : null,
     email: isAuthenticated ? "local@pikaboom.dev" : null,
     displayName: isAuthenticated ? "Local Parent" : null,
-    mode
+    mode,
+    hasProfile: isAuthenticated,
+    hasHousehold: isAuthenticated,
+    hasChildProfile: isAuthenticated
   };
+}
+
+export async function requireAuthenticatedSession() {
+  const session = await getAppSession();
+  if (!session.isAuthenticated) {
+    redirect("/login");
+  }
+  return session;
 }
 
 export async function requireParentSession() {

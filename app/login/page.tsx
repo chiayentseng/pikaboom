@@ -13,6 +13,7 @@ export default async function LoginPage({
   const session = await getAppSession();
   const params = await searchParams;
   const mode = getAppMode();
+  const needsSetup = session.isAuthenticated && session.mode === "supabase" && (!session.hasHousehold || !session.hasChildProfile);
 
   return (
     <main className="page-shell soft-grid" style={{ gap: 20, maxWidth: 680 }}>
@@ -21,7 +22,7 @@ export default async function LoginPage({
         <div className="soft-grid" style={{ gap: 8 }}>
           <h1 style={{ margin: 0, fontSize: "clamp(2rem, 4vw, 3.4rem)" }}>Sign In To Parent Mode</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.7 }}>
-            Production mode will use Supabase Auth. Until the cloud environment is configured, the app can still run in local development mode.
+            Production mode uses Supabase Auth. If this is the first time you sign in, the app will guide you through household and child setup before opening the full parent console.
           </p>
         </div>
 
@@ -41,8 +42,8 @@ export default async function LoginPage({
           <div className="task-card">
             <div className="mini-label">Already Signed In</div>
             <div>{session.displayName ?? session.email}</div>
-            <Link className="button-primary" href="/parent">
-              Go To Parent Console
+            <Link className="button-primary" href={needsSetup ? "/setup" : "/parent"}>
+              {needsSetup ? "Continue Cloud Setup" : "Go To Parent Console"}
             </Link>
           </div>
         ) : (

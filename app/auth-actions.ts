@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -50,7 +50,11 @@ export async function enterChildModeAction() {
   const cookieStore = await cookies();
   const session = await getAppSession();
 
-  const nextChildId = session.childProfileId ?? "local-child-profile";
+  const nextChildId = session.childProfileId;
+  if (!nextChildId) {
+    redirect(session.mode === "supabase" ? "/setup" : "/parent");
+  }
+
   cookieStore.set(authCookieNames.actingChild, nextChildId, {
     httpOnly: true,
     sameSite: "lax",

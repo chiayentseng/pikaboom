@@ -1,4 +1,5 @@
 ﻿import type { ReactNode } from "react";
+import { redirect } from "next/navigation";
 import { NavShell, type NavItem } from "@/components/nav-shell";
 import { enterChildModeAction, signOutAction } from "@/app/auth-actions";
 import { requireParentSession } from "@/lib/auth/session";
@@ -12,6 +13,10 @@ const items: NavItem[] = [
 
 export default async function ParentLayout({ children }: { children: ReactNode }) {
   const session = await requireParentSession();
+
+  if (session.mode === "supabase" && (!session.hasHousehold || !session.hasChildProfile)) {
+    redirect("/setup");
+  }
 
   return (
     <NavShell
