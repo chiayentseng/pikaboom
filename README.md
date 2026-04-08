@@ -1,44 +1,94 @@
 ﻿# PikaBoom
 
-PikaBoom 是一個把孩子日常努力轉成冒險進度的網頁遊戲 MVP。這一版已經不只是展示稿，而是有前後台管理、孩子提交流程、家長審核流程，以及本機 SQLite 資料庫的可互動版本。
+PikaBoom is a web game for families that turns real-world effort into visible progress, character growth, and world-building.
 
-## 目前功能
+Instead of behaving like a plain checklist, it aims to help a child feel:
 
-- 孩子端首頁、今日任務、角色、地圖、圖鑑、成就頁
-- 家長端首頁、任務管理、任務審核、報表頁
-- SQLite 本機資料庫，自動建立初始孩子資料與預設任務
-- 孩子可提交任務、領取獎勵
-- 家長可新增任務、審核通過或退回
-- 任務完成會推進等級、streak、星星幣與地圖進度
+> I am getting stronger, unlocking things, and growing my adventure world.
 
-## 技術棧
+## What It Does
 
-- Next.js 16 App Router
+- gives children a playful mission flow for daily tasks
+- lets parents create, review, and manage those tasks
+- records progress in a real local database
+- converts completed tasks into EXP, streaks, stars, and unlock progress
+- builds toward a parent-child gameplay loop instead of a plain habit tracker
+
+## Current MVP
+
+### Child Side
+
+- adventure home
+- today tasks
+- character growth
+- map progress
+- collection page
+- achievements page
+
+### Parent Side
+
+- dashboard
+- task management
+- task approval
+- reports view
+
+### Core System
+
+- Next.js App Router frontend
+- SQLite persistence with `better-sqlite3`
+- server actions for submit / approve / reject / claim flows
+- seeded single-family local data model
+
+## Screenshots
+
+### Home
+
+![PikaBoom home](./public/screenshots/home.png)
+
+### Child tasks
+
+![PikaBoom child tasks](./public/screenshots/child-tasks.png)
+
+### Parent task management
+
+![PikaBoom parent tasks](./public/screenshots/parent-tasks.png)
+
+## Tech Stack
+
+- Next.js 16
 - React 19
 - Tailwind CSS
-- better-sqlite3
+- TypeScript
+- SQLite
 
-## 本機開發
+## Local Development
 
 ```bash
 npm install
 npm run dev
 ```
 
-開發完成後可用下面指令驗證：
+Then open:
+
+- `http://127.0.0.1:3000`
+- `http://127.0.0.1:3000/child`
+- `http://127.0.0.1:3000/parent`
+
+## Build Check
 
 ```bash
 npm run build
 ```
 
-## 資料儲存
+## Data Storage
 
-- SQLite 資料庫位置：`data/pikaboom.db`
-- 目前是單家庭模式，之後可再擴充 parent/child 真正登入與雲端同步
+- Local database: `data/pikaboom.db`
+- Current mode: single-family local MVP
 
-## 下一步建議
+## Roadmap
 
-1. 接上正式登入與 parent/child 權限
-2. 改成 Supabase / Postgres 雲端資料庫
-3. 補任務照片證明、每週挑戰、成就事件系統
-4. 增加正式的 UI 動畫與結算演出
+1. Parent / child authentication and roles
+2. Cloud database with Supabase or Postgres
+3. Photo proof for tasks
+4. Weekly challenges and achievement events
+5. Richer reward animations and progression feedback
