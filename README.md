@@ -92,3 +92,9 @@ npm run build
 3. Photo proof for tasks
 4. Weekly challenges and achievement events
 5. Richer reward animations and progression feedback
+
+## Architecture Docs
+
+- [Docs index](./docs/README.md)
+- [Architecture decision](./docs/architecture-decision.md)
+- [Application blueprint](./docs/application-blueprint.md)
