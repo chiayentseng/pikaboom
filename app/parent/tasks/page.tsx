@@ -1,6 +1,6 @@
 ﻿import { createTaskAction, toggleTaskAction } from "@/app/actions";
 import { SectionCard } from "@/components/section-card";
-import { getTaskTemplates } from "@/lib/db";
+import { getTaskTemplates } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
@@ -122,3 +122,4 @@ export default function ParentTasksPage() {
     </div>
   );
 }
+

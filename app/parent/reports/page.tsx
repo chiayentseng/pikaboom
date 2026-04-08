@@ -1,5 +1,5 @@
 ﻿import { SectionCard } from "@/components/section-card";
-import { getProfile, getStats, getWorldProgress } from "@/lib/db";
+import { getProfile, getStats, getWorldProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
@@ -50,3 +50,4 @@ export default function ParentReportsPage() {
     </SectionCard>
   );
 }
+

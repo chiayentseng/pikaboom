@@ -6,6 +6,8 @@ This folder keeps project decisions and implementation guidance that should rema
 
 1. [Architecture Decision](./architecture-decision.md)
 2. [Application Blueprint](./application-blueprint.md)
+3. [Auth And Access Plan](./auth-and-access-plan.md)
+4. [Supabase Schema SQL](./supabase-schema.sql)
 
 ## Purpose
 

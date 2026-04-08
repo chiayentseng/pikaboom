@@ -1,7 +1,7 @@
 ﻿import Link from "next/link";
 import { SectionCard } from "@/components/section-card";
 import { claimTaskAction } from "@/app/actions";
-import { getCharacterProgress, getProfile, getStats, getTodayTasks, getWorldProgress } from "@/lib/db";
+import { getCharacterProgress, getProfile, getStats, getTodayTasks, getWorldProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
@@ -123,3 +123,4 @@ function statusLabel(status: string) {
       return "未開始";
   }
 }
+

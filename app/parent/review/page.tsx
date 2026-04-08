@@ -1,6 +1,6 @@
 ﻿import { approveTaskAction, rejectTaskAction } from "@/app/actions";
 import { SectionCard } from "@/components/section-card";
-import { getPendingReviews } from "@/lib/db";
+import { getPendingReviews } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
@@ -50,3 +50,4 @@ export default function ParentReviewPage() {
     </SectionCard>
   );
 }
+

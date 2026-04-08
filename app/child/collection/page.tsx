@@ -1,5 +1,5 @@
 ﻿import { SectionCard } from "@/components/section-card";
-import { getCharacterProgress } from "@/lib/db";
+import { getCharacterProgress } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
@@ -27,3 +27,4 @@ export default function ChildCollectionPage() {
     </SectionCard>
   );
 }
+

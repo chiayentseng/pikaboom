@@ -1,6 +1,6 @@
 ﻿import { claimTaskAction, submitTaskAction } from "@/app/actions";
 import { SectionCard } from "@/components/section-card";
-import { getTodayTasks } from "@/lib/db";
+import { getTodayTasks } from "@/lib/server/game-facade";
 
 export const dynamic = "force-dynamic";
 
@@ -77,3 +77,4 @@ function statusLabel(status: string) {
       return "未開始";
   }
 }
+

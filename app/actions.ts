@@ -1,7 +1,15 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
-import { approveTask, claimTask, createTask, rejectTask, submitTask, toggleTask } from "@/lib/db";
+import {
+  approveTask,
+  claimTask,
+  createTask,
+  rejectTask,
+  submitTask,
+  toggleTask
+} from "@/lib/server/game-facade";
+import type { EnergyType } from "@/lib/types/game";
 
 function toNumber(value: FormDataEntryValue | null, fallback = 0) {
   const parsed = Number(value);
@@ -18,7 +26,7 @@ export async function createTaskAction(formData: FormData) {
     unit: String(formData.get("unit") ?? "次"),
     repeatLabel: String(formData.get("repeatLabel") ?? "每日"),
     rewardExp: toNumber(formData.get("rewardExp"), 5),
-    rewardEnergyType: String(formData.get("rewardEnergyType") ?? "智慧能量"),
+    rewardEnergyType: String(formData.get("rewardEnergyType") ?? "智慧能量") as EnergyType,
     rewardEnergyValue: toNumber(formData.get("rewardEnergyValue"), 5),
     requiresApproval: formData.get("requiresApproval") === "on"
   });

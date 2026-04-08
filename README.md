@@ -98,3 +98,5 @@ npm run build
 - [Docs index](./docs/README.md)
 - [Architecture decision](./docs/architecture-decision.md)
 - [Application blueprint](./docs/application-blueprint.md)
+- [Auth and access plan](./docs/auth-and-access-plan.md)
+- [Supabase schema SQL](./docs/supabase-schema.sql)
