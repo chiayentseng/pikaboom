@@ -1,6 +1,6 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import type { Route } from "next";
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 type NavItem = {
   href: Route;
@@ -15,10 +15,11 @@ type NavShellProps = {
   subtitle: string;
   badge?: string;
   items: NavItem[];
+  actions?: ReactNode;
   children: ReactNode;
 };
 
-export function NavShell({ title, subtitle, badge, items, children }: NavShellProps) {
+export function NavShell({ title, subtitle, badge, items, actions, children }: NavShellProps) {
   return (
     <div className="page-shell soft-grid" style={{ gap: 20 }}>
       <header className="glass-panel hero-panel soft-grid" style={{ gap: 18 }}>
@@ -33,7 +34,7 @@ export function NavShell({ title, subtitle, badge, items, children }: NavShellPr
             </div>
           </div>
           <Link className="button-soft" href="/">
-            回到入口
+            Home
           </Link>
         </div>
         <nav className="nav-row">
@@ -43,6 +44,7 @@ export function NavShell({ title, subtitle, badge, items, children }: NavShellPr
             </Link>
           ))}
         </nav>
+        {actions ? <div className="nav-row">{actions}</div> : null}
       </header>
       {children}
     </div>

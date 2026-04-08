@@ -1,22 +1,41 @@
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
 import { NavShell, type NavItem } from "@/components/nav-shell";
+import { exitChildModeAction, signOutAction } from "@/app/auth-actions";
+import { requireChildSession } from "@/lib/auth/session";
 
 const items: NavItem[] = [
-  { href: "/child", label: "冒險首頁" },
-  { href: "/child/tasks", label: "今日任務" },
-  { href: "/child/characters", label: "角色" },
-  { href: "/child/map", label: "地圖" },
-  { href: "/child/collection", label: "圖鑑" },
-  { href: "/child/achievements", label: "成就" }
+  { href: "/child", label: "Adventure" },
+  { href: "/child/tasks", label: "Tasks" },
+  { href: "/child/characters", label: "Characters" },
+  { href: "/child/map", label: "Map" },
+  { href: "/child/collection", label: "Collection" },
+  { href: "/child/achievements", label: "Achievements" }
 ];
 
-export default function ChildLayout({ children }: { children: ReactNode }) {
+export default async function ChildLayout({ children }: { children: ReactNode }) {
+  const session = await requireChildSession();
+
   return (
     <NavShell
-      title="孩子端冒險模式"
-      subtitle="重點不是把任務塞滿，而是讓孩子一進來就想再往前推一點點。"
+      title="Child Adventure Mode"
+      subtitle="This is the child-facing experience where tasks, rewards, characters, and world progress all move forward."
       badge="Child Experience"
       items={items}
+      actions={
+        <>
+          <div className="pill">{session.displayName ?? "Child Mode"}</div>
+          <form action={exitChildModeAction}>
+            <button className="button-soft" type="submit">
+              Parent Console
+            </button>
+          </form>
+          <form action={signOutAction}>
+            <button className="button-soft" type="submit">
+              Sign Out
+            </button>
+          </form>
+        </>
+      }
     >
       {children}
     </NavShell>

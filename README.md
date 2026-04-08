@@ -73,6 +73,16 @@ Then open:
 - `http://127.0.0.1:3000`
 - `http://127.0.0.1:3000/child`
 - `http://127.0.0.1:3000/parent`
+- `http://127.0.0.1:3000/login`
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and fill values when moving toward cloud mode.
+
+Current behavior:
+
+- `PIKABOOM_APP_MODE=local`: local session + SQLite flow
+- `PIKABOOM_APP_MODE=supabase`: Supabase auth skeleton enabled when env vars are set
 
 ## Build Check
 
