@@ -84,6 +84,19 @@ Important note:
 - because of that, onboarding currently creates a hidden managed auth identity for the child
 - this works for MVP, but can be simplified later by decoupling child profiles from auth users
 
+### Row Level Security
+
+Implemented:
+
+- enable RLS on household-scoped tables
+- add helper functions for household membership and parent-role checks
+- protect reads and writes by household boundary instead of trusting only app code
+- keep onboarding and admin bootstrap on the service role path
+
+Migration:
+
+- `supabase/migrations/20260408190000_enable_rls.sql`
+
 ## Tables Expected
 
 The current code expects these tables to exist in Supabase:
@@ -115,8 +128,8 @@ After that, the parent console and child mode can stay on Supabase-backed data.
 
 ## Recommended Next Steps
 
-1. Add RLS policies for all household-scoped tables.
+1. Push the RLS migration to the hosted project and verify parent/child flows against real auth sessions.
 2. Add a post-signup onboarding check so setup opens automatically after auth callback.
 3. Decide whether child profiles should remain managed auth identities or become standalone domain records.
-4. Add integration checks for local mode and Supabase mode.
-5. Move remaining legacy helper files out of the active path once migration is complete.
+4. Tighten write policies further if child-auth sign-in is introduced later.
+5. Add integration checks for local mode and Supabase mode.

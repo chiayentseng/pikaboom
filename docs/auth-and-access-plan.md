@@ -91,3 +91,18 @@ Current implementation choice:
 - the product still behaves like parent-owned child mode
 
 This is acceptable for MVP, but a later schema cleanup could make `child_profiles` standalone and remove this requirement.
+
+## RLS Direction
+
+The production database should enforce access at the row level, not only in app code.
+
+Current RLS direction:
+
+- household members can read rows inside their own household scope
+- parent members can manage household structure and task templates
+- task execution tables are still household-scoped for MVP child-mode compatibility
+- setup and bootstrap continue to use service-role access server-side
+
+Current migration:
+
+- `supabase/migrations/20260408190000_enable_rls.sql`
